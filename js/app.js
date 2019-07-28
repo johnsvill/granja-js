@@ -23,17 +23,23 @@ var txtExponente = document.getElementById("txtExponente");
    alert('El resultado es ' + resultado);
 });*/
 document.addEventListener('keydown', movimiento);
-var fondo = document.getElementById('fondo');
-var lapiz = fondo.getContext('2d');
-var x = 0;
-var y = 0;
 
 const DIMENSION = 80;
+const DIMENSION_MATRIZ = 6;
+const CANTIDAD_ELEMENTOS_MAX = 10;
+const CANTIDAD_ELEMENTOS_MIN = 1;
 const LEFT = 37;
 const UP = 38;
 const DOWN = 40;
 const RIGHT = 39;
 const ENTER = 13;
+
+var fondo = document.getElementById('fondo');
+var lapiz = fondo.getContext('2d');
+var x = 0;
+var y = 0;
+var matriz = new Array(DIMENSION_MATRIZ);
+var intentos = 3;
 
 var tecla = {
     LEFT: LEFT,
@@ -91,17 +97,76 @@ llave.imagenLl.addEventListener('load', function() {
     dibujar(); //Esto es un evento para detectar una carga del lado de la página
 });
 
+iniciarMatriz();
+generarAnimales('v');
+generarAnimales('c');
+
+function iniciarMatriz() {
+    for (var i = 0; i < matriz.length; i++) {
+        matriz[i] = new Array(DIMENSION_MATRIZ);
+        for (var j = 0; j < matriz.length; j++) {
+            matriz[i][j] = 'x';
+        }
+    }
+}
+
+function generarAnimales(tipo) {
+    var numero = aleatorio(CANTIDAD_ELEMENTOS_MAX, CANTIDAD_ELEMENTOS_MIN);
+    var noContaminado = aleatorio(numero, 1);
+    for (var i = 1; i <= numero; i++) {
+        if (i == noContaminado) {
+            asignar(tipo, true);
+        }
+        asignar(tipo, false);
+    }
+}
+
+function asignar(tipo, noContaminado) {
+    var resultado = false;
+    do {
+        var fila = aleatorio(5, 0);
+        var columna = aleatorio(5, 0);
+        if (matriz[fila][columna] == 'x') {
+            if (noContaminado == true) {
+                if (tipo == 'v') {
+                    matriz[fila][columna] = 'vb';
+                } else {
+                    matriz[fila][columna] = 'cb';
+                }
+                matriz[fila][columna] = 'b';
+            } else {
+                matriz[fila][columna] = tipo;
+            }
+            resultado = true;
+        }
+    } while (!resultado);
+    return resultado;
+}
+
 function dibujar() {
     if (tile.cargaOk == true) //Se valida si el fondo está cargado para cargar las demás imagenes
     {
         lapiz.drawImage(tile.imagen, 0, 0);
-        dibujarVacas(aleatorio(10, 1));
-        dibujarCerdos(aleatorio(10, 1));
+        /*dibujarVacas(aleatorio(10, 1));
+        dibujarCerdos(aleatorio(10, 1));*/
+        dibujarMatriz();
         dibujarLlave();
     }
 }
 
-function dibujarVacas(numero) {
+function dibujarMatriz() {
+    for (var i = 0; i < matriz.length; i++) {
+        for (var j = 0; j < matriz.length; j++) {
+            if (matriz[i][j] == 'v' || matriz[i][j] == 'vb') {
+                lapiz.drawImage(vaca.imagenV, j * DIMENSION, i * DIMENSION);
+            } else if (matriz[i][j] == 'c' || matriz[i][j] == 'cb') {
+                lapiz.drawImage(cerdo.imagenC, j * DIMENSION, i * DIMENSION);
+            }
+        }
+    }
+}
+
+/*function dibujarVacas(numero) {
     for (i = 1; i <= numero; i++) {
         lapiz.drawImage(vaca.imagenV, aleatorio(5, 0) * DIMENSION, aleatorio(5, 0) * DIMENSION);
     }
@@ -111,7 +176,7 @@ function dibujarCerdos(numero) {
     for (i = 1; i <= numero; i++) {
         lapiz.drawImage(cerdo.imagenC, aleatorio(5, 0) * DIMENSION, aleatorio(5, 0) * DIMENSION);
     }
-}
+}*/
 
 function dibujarLlave() {
     x = aleatorio(5, 0);
@@ -140,6 +205,19 @@ function movimiento(evento) {
         case tecla.DOWN:
             y = y + 1;
             dibujar();
+            break;
+        case tecla.ENTER:
+            if (matriz[y][x] == 'vb' || matriz[y][x] == 'cb') {
+                alert('!!!JUEGO GANADO!!!');
+                location.reload();
+            } else {
+                intentos = intentos - 1;
+                if (intentos == 0) {
+                    alert('!!!GAME OVER!!! ;-(');
+                    location.reload();
+                }
+            }
+            alert(matriz[y][x]);
             break;
     }
 }
